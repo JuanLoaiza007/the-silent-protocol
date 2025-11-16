@@ -6,7 +6,11 @@ const RUN_SPEED = 10.0
 const JUMP_VELOCITY = 4.5
 
 const CAMERA_SENSIBILITY = 0.4
+
+
 @onready var camera = $CameraPivot
+@onready var state_machine: StateMachine = $StateMachine
+@onready var previous_state: StateMachine.State = state_machine.get_state()
 
 func _ready() -> void:
 	add_to_group("player")
@@ -45,4 +49,10 @@ func movement(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
 
-	
+	# Update state
+	state_machine.update_state(is_on_floor(), velocity.y, direction != Vector3.ZERO, speed == RUN_SPEED)
+
+	# Print state
+	if state_machine.get_state() != previous_state:
+		previous_state = state_machine.get_state()
+		print("Player State: ", state_machine.get_state_name())
