@@ -1,3 +1,8 @@
+# Metadata and cache files
+.vs/
+.vscode/
+*.uid
+
 # Godot 4+ specific ignores
 .godot/
 .nomedia
