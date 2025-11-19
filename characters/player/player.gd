@@ -5,7 +5,6 @@ const SPEED = 5.0
 const RUN_SPEED = 10.0
 const JUMP_VELOCITY = 4.5
 const CAMERA_SENSIBILITY = 0.4
-const FALL_DEATH_HEIGHT = -20.0
 
 @onready var camera = $CameraPivot
 @onready var foot_raycast = $FootRayCast
@@ -67,11 +66,7 @@ func _physics_process(delta: float) -> void:
 
 		update_footsteps_sound()
 
-		if global_position.y < FALL_DEATH_HEIGHT:
-			global_position = initial_position + Vector3(0, 10, 0)
-			velocity = Vector3.ZERO
-
-	move_and_slide()
+		move_and_slide()
 
 func _input(event: InputEvent) -> void:
 	if is_dead:

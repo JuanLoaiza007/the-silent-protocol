@@ -7,11 +7,18 @@
 [sub_resource type="GDScript" id="GDScript_rup2k"]
 script/source = "extends Node3D
 
+const DEATH_HEIGHT = -50.0
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	$Platform1/StaticBody3D.add_to_group(\"concrete_surface\")
 	$Platform2/StaticBody3D.add_to_group(\"grass_surface\")
-	pass
+
+func _physics_process(delta: float) -> void:
+	var player = $Player
+	if player and player.global_position.y < DEATH_HEIGHT:
+		if player.has_node(\"HealthComponent\"):
+			player.get_node(\"HealthComponent\").take_damage(999, Vector3.DOWN)
 "
 
 [sub_resource type="BoxMesh" id="BoxMesh_j57gt"]

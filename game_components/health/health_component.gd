@@ -21,7 +21,7 @@ func _process(delta: float) -> void:
             invulnerable = false
 
 func take_damage(amount: int, source_point: Vector3 = Vector3.ZERO):
-    if amount <= 0 or invulnerable:
+    if amount <= 0 or invulnerable or not is_alive():
         return
     current_health -= amount
     current_health = max(0, current_health)
