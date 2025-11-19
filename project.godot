@@ -15,6 +15,10 @@ run/main_scene="uid://c8xcjqwr5s156"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameStateManager="*res://scripts/game_state_manager.gd"
+
 [input]
 
 KEY_W={
