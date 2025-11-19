@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://bq3ijt1sxibei"]
+
+[ext_resource type="Script" uid="uid://c8ttlexcuf8w4" path="res://characters/villain/villain.gd" id="1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1tobf"]
+size = Vector3(7.0061646, 3.0446472, 4.038086)
+
+[node name="Villain" type="CharacterBody3D"]
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_1tobf")
