@@ -85,10 +85,13 @@ func update_state_forced(new_state: State) -> void:
 	current_state = new_state
 	var anim_name = animation_names[new_state]
 	if animation_player.has_animation(anim_name):
-		if new_state == State.ATTACKING:
+		if new_state == State.ATTACKING or new_state == State.DEATH_FORWARD or new_state == State.DEATH_BACKWARD:
 			animation_player.stop()
 			animation_player.get_animation(anim_name).loop_mode = Animation.LOOP_NONE
-			animation_player.play(anim_name, 0.2, 2.0)
+			if new_state == State.ATTACKING:
+				animation_player.play(anim_name, 0.2, 2.0)
+			else:
+				animation_player.play(anim_name, 0.2)
 		else:
 			animation_player.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 			animation_player.play(anim_name, 0.2)

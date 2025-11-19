@@ -12,7 +12,6 @@ enum CHECKPOINT_DATA {
 	LEVEL, # El ID del nivel para asegurar consistencia
 	POSITION, # La posición de resurrección del jugador
 	PLAYER_HEALTH, # La vida del jugador en un momento dado en el nivel actual
-	SESSION_SCORE_DELTA, # La puntuación extra que el jugador lleva temporalmente (si no ha pisado checkpoint)
 	SESSION_COLLECTED_ITEMS, # Los items que el jugador tiene temporalmente (si no ha pisado checkpoint)
 }
 
@@ -33,7 +32,6 @@ var _initial_game_data: Dictionary = {
 		CHECKPOINT_DATA.LEVEL : DEFAULT_CHECKPOINT_LEVEL,
 		CHECKPOINT_DATA.POSITION : Vector3.ZERO, # Usamos Vector3.ZERO como posición nula/segura
 		CHECKPOINT_DATA.PLAYER_HEALTH : DEFAULT_INITIAL_HEALTH,
-		CHECKPOINT_DATA.SESSION_SCORE_DELTA : 0,
 		CHECKPOINT_DATA.SESSION_COLLECTED_ITEMS : {}
 	}
 }
@@ -70,7 +68,6 @@ func get_spawn_state(current_level_path: String) -> Dictionary:
 	var checkpoint_data = game_data[GAME_DATA.LAST_CHECKPOINT_DATA]
 
 	# Resetea el buffer de sesión antes de decidir el punto de aparición
-	checkpoint_data[CHECKPOINT_DATA.SESSION_SCORE_DELTA] = 0
 	checkpoint_data[CHECKPOINT_DATA.SESSION_COLLECTED_ITEMS] = {}
 
 	# Verifica si hay un checkpoint válido en el nivel actual
@@ -97,9 +94,7 @@ func get_spawn_state(current_level_path: String) -> Dictionary:
 # Consolida el estado de la sesión actual en el estado permanente y actualiza el checkpoint.
 func save_checkpoint(new_position: Vector3, new_level_path: String, current_player_health: int) -> void:
 	# 1. Consolida la Puntuación y los Items
-	var session_delta = game_data[GAME_DATA.LAST_CHECKPOINT_DATA][CHECKPOINT_DATA.SESSION_SCORE_DELTA]
 	var session_items = game_data[GAME_DATA.LAST_CHECKPOINT_DATA][CHECKPOINT_DATA.SESSION_COLLECTED_ITEMS]
-	game_data[GAME_DATA.SCORE] += session_delta
 	# Fusiona los ítems de la sesión al permanente
 	for id in session_items:
 		game_data[GAME_DATA.COLLECTED_ITEMS][id] = true
@@ -112,7 +107,6 @@ func save_checkpoint(new_position: Vector3, new_level_path: String, current_play
 		checkpoint_data[CHECKPOINT_DATA.PLAYER_HEALTH] = current_player_health
 		
 		# 3. Limpia el Buffer de Sesión para el próximo tramo
-		checkpoint_data[CHECKPOINT_DATA.SESSION_SCORE_DELTA] = 0
 		checkpoint_data[CHECKPOINT_DATA.SESSION_COLLECTED_ITEMS] = {}
 		
 	# 4. Actualiza la vida base del jugador (opcional, si la vida se guarda)
@@ -124,7 +118,3 @@ func save_checkpoint(new_position: Vector3, new_level_path: String, current_play
 # Añade un item al buffer temporal de la sesión
 func add_session_item(item_puid: String) -> void:
 	game_data[GAME_DATA.LAST_CHECKPOINT_DATA][CHECKPOINT_DATA.SESSION_COLLECTED_ITEMS][item_puid] = true
-
-# Incrementa la puntuación temporal (delta) de la sesión
-func add_session_score(amount: int) -> void:
-	game_data[GAME_DATA.LAST_CHECKPOINT_DATA][CHECKPOINT_DATA.SESSION_SCORE_DELTA] += amount

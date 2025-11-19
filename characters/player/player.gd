@@ -11,8 +11,11 @@ const FALL_DEATH_HEIGHT = -20.0
 @onready var foot_raycast = $FootRayCast
 @onready var footsteps_audio = $FootstepsAudio
 @onready var actions_audio = $ActionsAudio
+@onready var health_component = $HealthComponent
 var state_machine: PlayerStateMachine
 var initial_position: Vector3
+var is_dead = false
+var last_damage_source: Vector3
 @onready var grass_sound = load("res://assets/audio/sfx/gravel_footsteps.mp3")
 @onready var concrete_sound = load("res://assets/audio/sfx/concrete_footsteps.mp3")
 @onready var attacking = load("res://assets/audio/sfx/sword-slice-distorted.wav")
@@ -24,8 +27,22 @@ func _ready() -> void:
 	state_machine = PlayerStateMachine.new()
 	add_child(state_machine)
 	state_machine.name = "StateMachine"
+	# Load health from game state
+	if GameStateManager:
+		GameStateManager.load()
+		var health = GameStateManager.game_data[GameStateManager.GAME_DATA.PLAYER_HEALTH]
+		if health <= 0:
+			health = 3
+			GameStateManager.game_data[GameStateManager.GAME_DATA.PLAYER_HEALTH] = health
+		health_component.set_health(health)
+	# Connect signals
+	health_component.health_changed.connect(_on_health_changed)
+	health_component.damaged.connect(_on_damaged)
+	health_component.died.connect(_on_died)
 
 func _physics_process(delta: float) -> void:
+	if is_dead:
+		return
 	var input_dir := Input.get_vector("KEY_A", "KEY_D", "KEY_W", "KEY_S")
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	var is_run_pressed = Input.is_action_pressed("KEY_SHIFT")
@@ -40,14 +57,21 @@ func _physics_process(delta: float) -> void:
 
 	var on_floor_now = is_on_floor()
 	state_machine.update_state(on_floor_now, velocity.y, input_dir, is_run_pressed, was_falling)
-	
+
+	# Handle fall damage
+	if was_falling and on_floor_now and velocity.y < -10:
+		var damage = abs(velocity.y) * 2
+		health_component.take_damage(damage, Vector3.DOWN)
+
 	update_footsteps_sound()
-	
+
 	if global_position.y < FALL_DEATH_HEIGHT:
 		global_position = initial_position + Vector3(0, 10, 0)
 		velocity = Vector3.ZERO
 
 func _input(event: InputEvent) -> void:
+	if is_dead:
+		return
 	if event is InputEventMouseMotion:
 		rotate_y(deg_to_rad(-event.relative.x * CAMERA_SENSIBILITY)) # X: on the screen horizontal
 		camera.rotate_x(deg_to_rad(-event.relative.y * CAMERA_SENSIBILITY)) # Y: on the screen vertical
@@ -135,3 +159,19 @@ func update_footsteps_sound() -> void:
 			footsteps_audio.stop()
 	else:
 		footsteps_audio.stop()
+
+func _on_health_changed(new_health: int) -> void:
+	print("Player health: ", new_health)
+	if GameStateManager:
+		GameStateManager.game_data[GameStateManager.GAME_DATA.PLAYER_HEALTH] = new_health
+		GameStateManager.save()
+
+func _on_damaged(amount: int, source_point: Vector3) -> void:
+	last_damage_source = source_point
+
+func _on_died() -> void:
+	is_dead = true
+	var death_state = PlayerStateMachine.State.DEATH_FORWARD
+	if last_damage_source.x < global_position.x:
+		death_state = PlayerStateMachine.State.DEATH_BACKWARD
+	state_machine.update_state_forced(death_state)
