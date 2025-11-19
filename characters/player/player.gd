@@ -41,33 +41,37 @@ func _ready() -> void:
 	health_component.died.connect(_on_died)
 
 func _physics_process(delta: float) -> void:
-	if is_dead:
-		return
-	var input_dir := Input.get_vector("KEY_A", "KEY_D", "KEY_W", "KEY_S")
-	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	var is_run_pressed = Input.is_action_pressed("KEY_SHIFT")
-	var was_falling = velocity.y < 0 and not is_on_floor()
+	# Apply gravity always
+	if not is_on_floor():
+		velocity += get_gravity() * delta
 
-	if Input.is_action_pressed("KEY_Q") and is_on_floor():
-		if state_machine.current_state != PlayerStateMachine.State.DANCING:
-			state_machine.update_state_forced(PlayerStateMachine.State.DANCING)
+	if not is_dead:
+		var input_dir := Input.get_vector("KEY_A", "KEY_D", "KEY_W", "KEY_S")
+		var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+		var is_run_pressed = Input.is_action_pressed("KEY_SHIFT")
+		var was_falling = velocity.y < 0 and not is_on_floor()
 
-	movement(delta, direction, is_run_pressed)
+		if Input.is_action_pressed("KEY_Q") and is_on_floor():
+			if state_machine.current_state != PlayerStateMachine.State.DANCING:
+				state_machine.update_state_forced(PlayerStateMachine.State.DANCING)
+
+		movement(delta, direction, is_run_pressed)
+
+		var on_floor_now = is_on_floor()
+		state_machine.update_state(on_floor_now, velocity.y, input_dir, is_run_pressed, was_falling)
+
+		# Handle fall damage
+		if was_falling and on_floor_now and velocity.y < -10:
+			var damage = abs(velocity.y) * 2
+			health_component.take_damage(damage, Vector3.DOWN)
+
+		update_footsteps_sound()
+
+		if global_position.y < FALL_DEATH_HEIGHT:
+			global_position = initial_position + Vector3(0, 10, 0)
+			velocity = Vector3.ZERO
+
 	move_and_slide()
-
-	var on_floor_now = is_on_floor()
-	state_machine.update_state(on_floor_now, velocity.y, input_dir, is_run_pressed, was_falling)
-
-	# Handle fall damage
-	if was_falling and on_floor_now and velocity.y < -10:
-		var damage = abs(velocity.y) * 2
-		health_component.take_damage(damage, Vector3.DOWN)
-
-	update_footsteps_sound()
-
-	if global_position.y < FALL_DEATH_HEIGHT:
-		global_position = initial_position + Vector3(0, 10, 0)
-		velocity = Vector3.ZERO
 
 func _input(event: InputEvent) -> void:
 	if is_dead:
@@ -87,13 +91,7 @@ func movement(delta: float, direction: Vector3, is_run_pressed: bool) -> void:
 	if state_machine.current_state == PlayerStateMachine.State.DANCING:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 		velocity.z = move_toward(velocity.z, 0, SPEED)
-		if not is_on_floor():
-			velocity += get_gravity() * delta
 		return
-
-	# Add the gravity.
-	if not is_on_floor():
-		velocity += get_gravity() * delta
 
 	# Handle jump.
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
@@ -170,9 +168,9 @@ func _on_damaged(amount: int, source_point: Vector3) -> void:
 	last_damage_source = source_point
 	# Apply knockback
 	var direction = (global_position - source_point).normalized()
-	velocity.x = direction.x * 40
-	velocity.z = direction.z * 40
-	velocity.y = 6
+	velocity.y = 5
+	velocity.x = direction.x * 60
+	velocity.z = direction.z * 60
 
 func _on_died() -> void:
 	is_dead = true
