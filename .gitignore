@@ -2,7 +2,8 @@
 .vs/
 .vscode/
 *.uid
-.tmp
+*.tmp
+*.blend1
 
 # Godot 4+ specific ignores
 .godot/

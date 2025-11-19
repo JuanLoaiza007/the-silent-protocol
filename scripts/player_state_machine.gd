@@ -13,7 +13,8 @@ enum State {
 	DEATH_BACKWARD,
 	WALKING_LEFT,
 	WALKING_RIGHT,
-	ATTACKING
+	ATTACKING,
+	RUNNING_FORWARD,
 }
 
 var animation_names = {
@@ -28,7 +29,8 @@ var animation_names = {
 	State.DEATH_BACKWARD: "DEATH_BACKWARD",
 	State.WALKING_LEFT: "WALKING_LEFT",
 	State.WALKING_RIGHT: "WALKING_RIGHT",
-	State.ATTACKING: "ATTACKING"
+	State.ATTACKING: "ATTACKING",
+	State.RUNNING_FORWARD: "RUNNING_FORWARD",
 }
 
 var current_state: State = State.IDLE
@@ -49,7 +51,9 @@ func update_state(on_floor: bool, velocity_y: float, input_dir: Vector2, is_run_
 		if was_falling:
 			new_state = State.FALLING_TO_LANDING
 		elif input_dir.length() > 0:
-			if abs(input_dir.x) > abs(input_dir.y):
+			if is_run_pressed:
+				new_state = State.RUNNING_FORWARD
+			elif abs(input_dir.x) > abs(input_dir.y):
 				if input_dir.x > 0:
 					new_state = State.WALKING_RIGHT
 				else:

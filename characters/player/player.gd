@@ -109,7 +109,8 @@ func update_footsteps_sound() -> void:
 		PlayerStateMachine.State.WALKING_FORWARD,
 		PlayerStateMachine.State.WALKING_BACKWARD,
 		PlayerStateMachine.State.WALKING_LEFT,
-		PlayerStateMachine.State.WALKING_RIGHT
+		PlayerStateMachine.State.WALKING_RIGHT,
+		PlayerStateMachine.State.RUNNING_FORWARD
 	].has(state_machine.current_state)
 
 	if is_walking_state and is_on_floor():
@@ -120,10 +121,9 @@ func update_footsteps_sound() -> void:
 			elif collider.is_in_group("grass_surface"):
 				current_surface = "grass"
 		
-		var is_running_speed = velocity.length_squared() > (SPEED * SPEED) # Verifica si la velocidad es de correr
 		var pitch = 1.0
-		
-		if is_running_speed:
+
+		if state_machine.current_state == PlayerStateMachine.State.RUNNING_FORWARD:
 			pitch = 1.2
 		else:
 			pitch = 0.8
