@@ -90,7 +90,6 @@ func _physics_process(delta: float) -> void:
 		State.ATTACKING_DELAY:
 			pass  # Handled above
 
-	print("Villain state: ", State.keys()[current_state])
 	move_and_slide()
 
 func _idle_behavior(delta: float) -> void:
