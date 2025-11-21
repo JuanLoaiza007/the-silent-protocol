@@ -16,7 +16,7 @@ size = Vector3(1, 1.6042786, 3.6958237)
 height = 1.3988647
 radius = 1.0
 
-[node name="Rat" type="Node3D"]
+[node name="Rat" type="CharacterBody3D"]
 
 [node name="Model" parent="." instance=ExtResource("1_s1kt0")]
 transform = Transform3D(-1.7484556e-08, 0, 0.4, 0, 0.4, 0, -0.4, 0, -1.7484556e-08, -0.015820313, 0, -0.015820313)
