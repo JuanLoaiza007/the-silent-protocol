@@ -6,4 +6,4 @@
 script = ExtResource("1")
 speed = 2.0
 
-[node name="AttackDelayTimmer" type="Timer" parent="."]
+[node name="HitboxDelayTimmer" type="Timer" parent="."]

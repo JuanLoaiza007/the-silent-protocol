@@ -11,6 +11,8 @@ const VILLAIN_SCENES = {
 	VillainType.COC: preload("res://characters/villain/coc.tscn")
 }
 
+const HealthComponent = preload("res://game_components/health/health_component.gd")
+
 @export var villain_type: VillainType = VillainType.RAT:
 	set(value):
 		villain_type = value
@@ -66,6 +68,8 @@ func _ready() -> void:
 		return
 
 	add_to_group("villain")
+	var health_component = HealthComponent.new()
+	add_child(health_component)
 	initial_position = global_position
 
 	# Instance the villain scene
@@ -82,7 +86,6 @@ func _ready() -> void:
 	if not villain_scene.has_node("HurtboxArea"):
 		push_error("Villain must have a HurtboxArea node")
 		return
-	# Note: COC doesn't have collision, will add default
 
 	# Assign areas
 	vision_area = villain_scene.get_node("VisionArea")
@@ -92,6 +95,7 @@ func _ready() -> void:
 	vision_area.body_entered.connect(_on_vision_body_entered)
 	vision_area.body_exited.connect(_on_vision_body_exited)
 	hurtbox_area.body_entered.connect(_on_hurtbox_body_entered)
+	hitbox_area.body_entered.connect(_on_hitbox_body_entered)
 
 	# Reparent collision shape to the root for physics, or add default
 	if villain_scene.has_node("CollisionShape3D"):
@@ -99,13 +103,7 @@ func _ready() -> void:
 		villain_scene.remove_child(collision_shape)
 		add_child(collision_shape)
 	else:
-		# Add default collision for villains without one (e.g., COC)
-		var default_shape = CapsuleShape3D.new()
-		default_shape.radius = 0.5
-		default_shape.height = 1.0
-		var default_collision = CollisionShape3D.new()
-		default_collision.shape = default_shape
-		add_child(default_collision)
+		push_error("Villain must have a CollisionShape3D node")
 
 	# Get ranges
 	var vision_shape = vision_area.get_child(0) as CollisionShape3D
@@ -223,6 +221,10 @@ func _on_player_hitbox_area_body_exited(body: Node3D) -> void:
 		in_player_hitbox_area = false
 
 func _on_hurtbox_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player") and has_node("HealthComponent"):
+		get_node("HealthComponent").take_damage(1, global_position)
+
+func _on_hitbox_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player") and body.has_node("HealthComponent"):
 		body.get_node("HealthComponent").take_damage(1, global_position)
 
