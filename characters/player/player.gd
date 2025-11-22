@@ -31,9 +31,9 @@ const KNOCKBACK_HORIZONTAL = 30.0
 @onready var footsteps_audio = $FootstepsAudio
 @onready var actions_audio = $ActionsAudio
 @onready var health_component = $HealthComponent
-@onready var game_over_ui = $CanvasLayer
-@onready var victory_ui = $CanvasLayer2/VictoryControl
+var victory_ui: Control
 var game_finished = false
+signal player_died(last_damage_source: Vector3)
 var state_machine: PlayerStateMachine
 var initial_position: Vector3
 var is_dead = false
@@ -51,7 +51,7 @@ func _ready() -> void:
 	state_machine = PlayerStateMachine.new()
 	add_child(state_machine)
 	state_machine.name = "StateMachine"
-	game_over_ui.visible = false
+	victory_ui = get_node("/root/Main/GameWorld/CanvasLayer/VictoryControl")
 	# Load health from game state
 	if GameStateManager:
 		GameStateManager.load()
@@ -89,7 +89,7 @@ func _physics_process(delta: float) -> void:
 		push_rigid_objects()
 
 func _input(event: InputEvent) -> void:
-	if is_dead or game_finished:
+	if game_finished:
 		if event.is_action_pressed("ui_accept"):
 			# Restablecer salud si usas GameStateManager para evitar bucle de muerte al reiniciar
 			if GameStateManager:
@@ -227,12 +227,7 @@ func _on_damaged(amount: int, source_point: Vector3) -> void:
 	velocity.z = direction.z * KNOCKBACK_HORIZONTAL
 
 func _on_died() -> void:
-	is_dead = true
-	game_over_ui.visible = true # Mostrar UI
-	var death_state = PlayerStateMachine.State.DEATH_FORWARD
-	if last_damage_source.x < global_position.x:
-		death_state = PlayerStateMachine.State.DEATH_BACKWARD
-	state_machine.update_state_forced(death_state)
+	player_died.emit(last_damage_source)
 
 func win_game() -> void:
 	if game_finished: return
