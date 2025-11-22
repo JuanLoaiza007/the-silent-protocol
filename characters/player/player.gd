@@ -233,6 +233,7 @@ func _on_died() -> void:
 	if last_damage_source.x < global_position.x:
 		death_state = PlayerStateMachine.State.DEATH_BACKWARD
 	state_machine.update_state_forced(death_state)
+	AudioManager.change_music(AudioManager.TRACKS.LOOP_TECHNO_2)
 
 func win_game() -> void:
 	if game_finished: return

@@ -3,7 +3,7 @@ extends Node3D
 const DEATH_HEIGHT = -30.0
 
 # Called when the node enters the scene tree for the first time.
-func _ready() -> void:	
+func _ready() -> void:
 	pass # Add any initialization logic here if needed
 
 func _physics_process(delta: float) -> void:
