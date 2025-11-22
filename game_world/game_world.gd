@@ -14,10 +14,16 @@ const LEVEL_PATHS: Dictionary = {
 
 const LEVEL_TRANSITIONS: Dictionary = {
   LEVELS.LEVEL_0: LEVELS.LEVEL_1,
-  LEVELS.LEVEL_1: null,  # Fin del juego
+  LEVELS.LEVEL_1: null, # Fin del juego
 }
 
 @onready var current_level_node = $CurrentLevel
+
+@onready var victory_ui = $CanvasLayer/VictoryControl
+@onready var death_ui = $CanvasLayer/DeathUI
+@onready var next_level_ui = $CanvasLayer/NextLevelUI
+
+var game_finished = false
 
 var current_level_path: String = LEVEL_PATHS[LEVELS.MAIN_MENU]
 var current_level_id: LEVELS = LEVELS.MAIN_MENU
@@ -30,14 +36,23 @@ func _ready():
 		victory_ui.visible = false
 	if death_ui:
 		death_ui.visible = false
+	if next_level_ui:
+		print(next_level_ui)
+		next_level_ui.next_level_pressed.connect(_on_next_level_ui_pressed)
+		next_level_ui.main_menu_pressed.connect(_on_next_level_main_menu_pressed)
 	load_level(current_level_path)
 
-func load_level(level_path: String):
-	# Ocultar UIs
+func hide_all_ui():
 	if death_ui:
 		death_ui.visible = false
 	if victory_ui:
 		victory_ui.visible = false
+	if next_level_ui:
+		next_level_ui.hide_ui()
+
+func load_level(level_path: String):
+	# Ocultar UIs
+	hide_all_ui()
 	# Remover nivel actual si existe
 	for child in current_level_node.get_children():
 		child.queue_free()
@@ -75,11 +90,7 @@ func go_to_main_menu():
 func start_game():
 	load_level(LEVEL_PATHS[LEVELS.LEVEL_0])
 
-# Para transiciones futuras, agregar señales o animaciones
 
-@onready var victory_ui = $CanvasLayer/VictoryControl
-@onready var death_ui = $CanvasLayer/DeathUI
-var game_finished = false
 
 # Crea una señal que reciba con argumento del proximo nivel
 signal next_level(level_id)
@@ -87,6 +98,7 @@ signal next_level(level_id)
 func on_player_died(last_damage: Vector3):
 	var player = get_tree().get_nodes_in_group("player")[0]
 	player.is_dead = true
+	hide_all_ui()
 	if death_ui:
 		death_ui.visible = true
 	var death_state = PlayerStateMachine.State.DEATH_FORWARD
@@ -99,21 +111,34 @@ func victory():
 	if game_finished: return
 	game_finished = true
 	var next_level = LEVEL_TRANSITIONS.get(current_level_id, null)
+	hide_all_ui()
+	
 	if next_level != null:
-		change_to_level(next_level)
-		game_finished = false
-		if victory_ui:
-			victory_ui.visible = false
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		var player = get_tree().get_nodes_in_group("player")[0]
-		player.game_finished = false
-		player.set_physics_process(true)
-		player.state_machine.update_state_forced(PlayerStateMachine.State.IDLE)
+		# Mostrar UI de siguiente nivel (nivel intermedio)
+		if next_level_ui:
+			next_level_ui.show_ui()  # Usar método del componente
 	else:
+		# Mostrar UI de victoria final
 		if victory_ui:
 			victory_ui.visible = true
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		var player = get_tree().get_nodes_in_group("player")[0]
-		player.game_finished = true
-		player.set_physics_process(false)
-		player.state_machine.update_state_forced(PlayerStateMachine.State.IDLE)
+			
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	var player = get_tree().get_nodes_in_group("player")[0]
+	player.game_finished = true
+	player.set_physics_process(false)
+	player.state_machine.update_state_forced(PlayerStateMachine.State.IDLE)
+
+
+func _on_next_level_ui_pressed():
+	var next_level = LEVEL_TRANSITIONS.get(current_level_id, null)
+	if next_level != null:
+		# Ocultar UI y cambiar nivel
+		if next_level_ui:
+			next_level_ui.hide_ui()
+		change_to_level(next_level)
+
+func _on_next_level_main_menu_pressed():
+	if next_level_ui:
+		next_level_ui.hide_ui()
+	go_to_main_menu()
+	game_finished = false

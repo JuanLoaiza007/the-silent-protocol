@@ -1,15 +1,19 @@
 extends Control
 
-@onready var restart_button = $VBoxContainer/RestartButton
-@onready var main_menu_button = $VBoxContainer/MainMenuButton
+@onready var next_level_button = $VBoxContainerNextLevel/NextLevelButton
+@onready var main_menu_button = $VBoxContainerNextLevel/MainMenuButton
 
 var selected_index = 0
 var buttons = []
 
+# Señales que emitirá este componente
+signal next_level_pressed
+signal main_menu_pressed
+
 func _ready():
-	buttons = [restart_button, main_menu_button]
+	buttons = [next_level_button, main_menu_button]
 	update_selection()
-	restart_button.connect("pressed", Callable(self, "_on_restart_pressed"))
+	next_level_button.connect("pressed", Callable(self, "_on_next_level_pressed"))
 	main_menu_button.connect("pressed", Callable(self, "_on_main_menu_pressed"))
 	visible = false
 
@@ -32,11 +36,18 @@ func update_selection():
 		else:
 			buttons[i].release_focus()
 
-func _on_restart_pressed():
-	if GameStateManager:
-		GameStateManager.game_data[GameStateManager.GAME_DATA.PLAYER_HEALTH] = 3
-	var game_world = get_node("/root/Main/GameWorld")
-	game_world.load_level(game_world.current_level_path)
+func _on_next_level_pressed():
+	next_level_pressed.emit()
 
 func _on_main_menu_pressed():
-	get_node("/root/Main/GameWorld").go_to_main_menu()
+	main_menu_pressed.emit()
+
+# Función para mostrar la UI
+func show_ui():
+	visible = true
+	selected_index = 0
+	update_selection()
+
+# Función para ocultar la UI
+func hide_ui():
+	visible = false
