@@ -4347,20 +4347,3 @@ shape = SubResource("CapsuleShape3D_xxgcw")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="HitboxArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.007446289, -0.15258789, -0.5004464)
 shape = SubResource("BoxShape3D_xxgcw")
-
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="GameOverControl" type="Control" parent="CanvasLayer"]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Label" type="Label" parent="CanvasLayer/GameOverControl"]
-layout_mode = 0
-offset_left = 375.0
-offset_top = 292.0
-offset_right = 716.0
-offset_bottom = 315.0
-text = "HAS MUERTO. Presiona ENTER para reiniciar"
-horizontal_alignment = 1

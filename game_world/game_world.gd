@@ -28,9 +28,16 @@ func _ready():
 		return
 	if victory_ui:
 		victory_ui.visible = false
+	if death_ui:
+		death_ui.visible = false
 	load_level(current_level_path)
 
 func load_level(level_path: String):
+	# Ocultar UIs
+	if death_ui:
+		death_ui.visible = false
+	if victory_ui:
+		victory_ui.visible = false
 	# Remover nivel actual si existe
 	for child in current_level_node.get_children():
 		child.queue_free()
@@ -48,10 +55,13 @@ func load_level(level_path: String):
 				current_level_id = id
 				break
 
-		# Conectar señal del treasure_chest si existe
+		# Conectar señales
 		var treasure_chest = level_instance.get_node_or_null("TreasureChest")
 		if treasure_chest:
 			treasure_chest.connect("victory", Callable(self, "victory"))
+		var player = level_instance.get_node_or_null("Player")
+		if player:
+			player.player_died.connect(Callable(self, "on_player_died"))
 	else:
 		push_error("No se pudo cargar el nivel: " + level_path)
 
@@ -68,10 +78,22 @@ func start_game():
 # Para transiciones futuras, agregar señales o animaciones
 
 @onready var victory_ui = $CanvasLayer/VictoryControl
+@onready var death_ui = $CanvasLayer/DeathUI
 var game_finished = false
 
 # Crea una señal que reciba con argumento del proximo nivel
 signal next_level(level_id)
+
+func on_player_died(last_damage: Vector3):
+	var player = get_tree().get_nodes_in_group("player")[0]
+	player.is_dead = true
+	if death_ui:
+		death_ui.visible = true
+	var death_state = PlayerStateMachine.State.DEATH_FORWARD
+	if last_damage.x < player.global_position.x:
+		death_state = PlayerStateMachine.State.DEATH_BACKWARD
+	player.state_machine.update_state_forced(death_state)
+	AudioManager.change_music(AudioManager.TRACKS.LOOP_TECHNO_2)
 
 func victory():
 	if game_finished: return
